@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="recipetypes">
+        <item>General</item>
         <item>Breakfast</item>
         <item>Lunch</item>
         <item>Dinner</item>
