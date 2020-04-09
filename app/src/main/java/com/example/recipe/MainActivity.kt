@@ -7,6 +7,8 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatSpinner
@@ -23,8 +25,10 @@ import kotlinx.android.synthetic.main.content_main.*
 class MainActivity : AppCompatActivity() {
 
     val newRecipeActivityRequestCode = 1
+    val existingRecipeActivityRequestCode = 2
     private lateinit var mViewModel: RecipeListViewModel
     private lateinit var mRecipeAdapter: RecipeAdapter
+    private var allRecipeList: MutableList<Recipe> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +54,27 @@ class MainActivity : AppCompatActivity() {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinner.adapter = adapter
         }
+        spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                /** Do nothing */
+            }
+
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                when (spRecipeTypes.selectedItemPosition != 0) {
+                    true -> {
+                        val filteredList = allRecipeList.filter { recipes ->
+                            recipes.type ==  spRecipeTypes.selectedItem.toString() }
+                        mRecipeAdapter.reloadRecipeList(filteredList)
+                    }
+                    else -> mRecipeAdapter.reloadRecipeList(allRecipeList)
+                }
+            }
+        }
 
         // Setup recyclerview to list down the recipes
         mRecipeAdapter = RecipeAdapter(this, mutableListOf())
@@ -58,6 +83,7 @@ class MainActivity : AppCompatActivity() {
 
         mViewModel = ViewModelProvider(this).get(RecipeListViewModel::class.java)
         mViewModel.allRecipes.observe(this, Observer { recipes ->
+            allRecipeList.clear(); allRecipeList.addAll(recipes)
             recipes?.let { mRecipeAdapter.reloadRecipeList(it) }
         })
 
@@ -78,21 +104,31 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == newRecipeActivityRequestCode && resultCode == Activity.RESULT_OK) {
+        if ((requestCode == newRecipeActivityRequestCode ||
+                    requestCode == existingRecipeActivityRequestCode) && resultCode == Activity.RESULT_OK) {
             val recipeName = data?.getStringExtra(AddNewRecipeActivity.RECIPE_NAME)
             if (recipeName != null) {
-                val recipe = Recipe(
-                    recipeName, "",
-                    data.getStringExtra(AddNewRecipeActivity.RECIPE_INGREDIENTS),
-                    data.getStringExtra(AddNewRecipeActivity.RECIPE_STEPS), "", ""
-                )
+                val recipe = when (requestCode) {
+                    newRecipeActivityRequestCode -> {
+                        Recipe(
+                            recipeName,
+                            data.getStringExtra(AddNewRecipeActivity.RECIPE_TYPE),
+                            data.getStringExtra(AddNewRecipeActivity.RECIPE_INGREDIENTS),
+                            data.getStringExtra(AddNewRecipeActivity.RECIPE_STEPS), "", ""
+                        )
+                    }
+                    else -> {
+                        Recipe(
+                            data.getIntExtra(AddNewRecipeActivity.RECIPE_ID, -1),
+                            recipeName,
+                            data.getStringExtra(AddNewRecipeActivity.RECIPE_TYPE),
+                            data.getStringExtra(AddNewRecipeActivity.RECIPE_INGREDIENTS),
+                            data.getStringExtra(AddNewRecipeActivity.RECIPE_STEPS), "", ""
+                        )
+                    }
+                }
                 mViewModel.insert(recipe)
             }
-        } else {
-            Toast.makeText(
-                applicationContext,
-                R.string.empty_not_saved,
-                Toast.LENGTH_LONG).show()
         }
     }
 

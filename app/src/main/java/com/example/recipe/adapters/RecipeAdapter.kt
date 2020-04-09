@@ -1,5 +1,6 @@
 package com.example.recipe.adapters
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -8,13 +9,15 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.recipe.AddNewRecipeActivity
+import com.example.recipe.MainActivity
 import com.example.recipe.R
 import com.example.recipe.data.Recipe
 import kotlinx.android.synthetic.main.recipe_item.view.*
 
-class RecipeAdapter(val mContext: Context, var recipes: List<Recipe>) :
+class RecipeAdapter(private val mContext: Context, var recipes: List<Recipe>) :
     RecyclerView.Adapter<RecipeAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -30,10 +33,12 @@ class RecipeAdapter(val mContext: Context, var recipes: List<Recipe>) :
         holder.tvRecipeName?.text = recipes[position].name
         holder.llItem?.setOnClickListener {
             val intent = Intent(mContext, AddNewRecipeActivity::class.java)
+            intent.putExtra(RECIPE_ID, recipes[position].recipeId)
+            intent.putExtra(RECIPE_TYPE, recipes[position].type)
             intent.putExtra(RECIPE_NAME, holder.tvRecipeName?.text)
             intent.putExtra(RECIPE_INGREDIENTS, recipes[position].ingredients)
             intent.putExtra(RECIPE_STEPS, recipes[position].steps)
-            mContext.startActivity(intent)
+            (mContext as MainActivity).startActivityForResult(intent, mContext.existingRecipeActivityRequestCode)
         }
     }
 
@@ -49,6 +54,7 @@ class RecipeAdapter(val mContext: Context, var recipes: List<Recipe>) :
     }
 
     companion object {
+        const val RECIPE_ID = "com.example.recipe.RECIPE_ID"
         const val RECIPE_NAME = "com.example.recipe.RECIPE_NAME"
         const val RECIPE_TYPE = "com.example.recipe.RECIPE_TYPE"
         const val RECIPE_INGREDIENTS = "com.example.recipe.RECIPE_INGREDIENTS"

@@ -24,4 +24,5 @@ class RecipeListViewModel(application: Application) : AndroidViewModel(applicati
     fun insert(recipe: Recipe) = viewModelScope.launch(Dispatchers.IO) {
         repository.insert(recipe)
     }
+
 }

@@ -11,4 +11,5 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_add_new_recipe">Add a New Recipe</string>
     <string name="empty_not_saved">Empty recipe name</string>
+    <string name="select_recipe_type">Select recipe type</string>
 </resources>
